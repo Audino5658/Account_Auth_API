@@ -13,10 +13,10 @@ COPY pyproject.toml .
 # Create virtual environment and install dependencies
 RUN uv venv .venv
 # Install dependencies using uv pip interface
-RUN uv pip install -r pyproject.toml
+RUN uv pip install .
 
 # Copy the application code
-COPY main.py .
+COPY acct_auth_app ./acct_auth_app
 
 # Make sure the venv is on the PATH
 ENV PATH="/app/.venv/bin:$PATH"
@@ -25,4 +25,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "acct_auth_app.main:app", "--host", "0.0.0.0", "--port", "8000"]
