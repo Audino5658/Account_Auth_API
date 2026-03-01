@@ -1,0 +1,28 @@
+# Use a lightweight Python image
+FROM python:3.11-slim
+
+# Install uv (The fast package manager)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependency definition
+COPY pyproject.toml .
+
+# Create virtual environment and install dependencies
+RUN uv venv .venv
+# Install dependencies using uv pip interface
+RUN uv pip install -r pyproject.toml
+
+# Copy the application code
+COPY main.py .
+
+# Make sure the venv is on the PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Expose the port
+EXPOSE 8000
+
+# Run the application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
