@@ -122,9 +122,9 @@ def signup(req: schemas.SignupRequest, db: Session = Depends(get_db)):
     new_user = models.User(
         user_id=req.user_id,
         password=req.password,
-        nickname=req.user_id, # Default nickname is user_id
-        comment="",
-        auth_token=generate_basic_auth_token(req.user_id, req.password) # If need testing, generate token here. 
+        nickname=req.nickname if req.nickname else req.user_id, # Default nickname is user_id
+        comment=req.comment if req.comment else "", # Default comment is empty string
+        # auth_token=generate_basic_auth_token(req.user_id, req.password) # If need testing, generate token here. 
     )
     db.add(new_user)
     db.commit()
@@ -152,7 +152,6 @@ def get_user(
         raise HTTPException(status_code=404, detail={"message": "No user found"})
     
     # Validate Auth
-    auth_header = db.query(models.User).filter(models.User.auth_token).first()
     get_current_user(db, auth_header)
 
     # build response payload; omit comment key when it's an empty string

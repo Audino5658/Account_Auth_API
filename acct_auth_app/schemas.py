@@ -5,6 +5,8 @@ from typing import Optional
 class SignupRequest(BaseModel):
     user_id: Optional[str] = None
     password: Optional[str] = None
+    nickname: Optional[str] = None
+    comment: Optional[str] = None
 
 class UpdateRequest(BaseModel):
     nickname: Optional[str] = None
