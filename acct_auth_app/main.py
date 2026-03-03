@@ -65,7 +65,7 @@ def get_current_user(db: Session, authorization: str):
     if not authorization:
         raise HTTPException(status_code=401, detail={"message": "Authentication failed"})
     
-    # Decode Basic Auth token and extract user_id and password
+    # Decode Basic Auth header and extract user_id and password
     try:
         prefix, encoded = authorization.split(" ", 1)
         if prefix != "Basic":
@@ -177,6 +177,7 @@ def update_user(
     # 1. Auth & Permission Check
     current_user = get_current_user(db, auth_header)
     
+    # Permission Check: Users can only update their own account information
     if current_user.user_id != user_id:
         raise HTTPException(status_code=403, detail={"message": "No permission for update"})
 
@@ -201,9 +202,7 @@ def update_user(
     
     # 5. Update Fields
     if req.nickname is not None:
-        # If empty string provided, requirements imply reset to user_id? 
-        # Or usually it validates non-empty. Based on "required nickname", let's assume valid string.
-        # However, checking the "signup" logic, default is user_id.
+        # If empty string provided, reset to user_id.
         current_user.nickname = req.nickname if req.nickname else user_id
     
     if req.comment is not None:
