@@ -14,10 +14,9 @@ from .database import SessionLocal, engine
 models.Base.metadata.create_all(bind=engine)
 
 
-
 # --- Helper Functions ---
 
-# Create Basic Auth token string
+# Create Basic Auth token string for testing. In real application, it is supposed to be generated and sent from front-end side.
 # Format: "Basic " + base64("user_id:password")
 def generate_basic_auth_token(user_id: str, password: str) -> str:
     raw_str = f"{user_id}:{password}"
@@ -66,9 +65,20 @@ def get_current_user(db: Session, authorization: str):
     if not authorization:
         raise HTTPException(status_code=401, detail={"message": "Authentication failed"})
     
-    user = db.query(models.User).filter(models.User.auth_token == authorization).first()
+    # Decode Basic Auth token and extract user_id and password
+    try:
+        prefix, encoded = authorization.split(" ", 1)
+        if prefix != "Basic":
+            raise HTTPException(status_code=401, detail={"message": "Authentication failed"})
+        decoded = base64.b64decode(encoded).decode('utf-8')
+        user_id, password = decoded.split(":", 1)
+    except (ValueError, UnicodeDecodeError):
+        raise HTTPException(status_code=401, detail={"message": "Authentication failed"})
+
+    # Find user in DB
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
     
-    if not user:
+    if not user or user.password != password:
          raise HTTPException(status_code=401, detail={"message": "Authentication failed"})
     
     return user
@@ -114,7 +124,7 @@ def signup(req: schemas.SignupRequest, db: Session = Depends(get_db)):
         password=req.password,
         nickname=req.user_id, # Default nickname is user_id
         comment="",
-        auth_token=generate_basic_auth_token(req.user_id, req.password)
+        #auth_token=generate_basic_auth_token(req.user_id, req.password) # If need testing, generate token here. 
     )
     db.add(new_user)
     db.commit()
@@ -125,7 +135,7 @@ def signup(req: schemas.SignupRequest, db: Session = Depends(get_db)):
         "user": {
             "user_id": new_user.user_id,
             "nickname": new_user.nickname,
-            "authorization token": new_user.auth_token
+            #"authorization token": new_user.auth_token # For testing purpose. 
         }
     }
 
@@ -143,7 +153,6 @@ def get_user(
     
     # Validate Auth
     get_current_user(db, auth_header)
-
 
     # build response payload; omit comment key when it's an empty string
     user_payload = {

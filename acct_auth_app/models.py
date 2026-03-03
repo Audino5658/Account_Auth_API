@@ -14,4 +14,4 @@ class User(Base):
     comment = Column(String, nullable=True)
     
     # store auth token header for simplicity.
-    auth_token = Column(String, unique=True, index=True) 
+    # auth_token = Column(String, unique=True, index=True) 
