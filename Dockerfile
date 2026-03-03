@@ -24,5 +24,5 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Expose the port
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "acct_auth_app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application (use PORT env var if provided, else default to 8000)
+CMD ["sh", "-c", "uvicorn acct_auth_app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
