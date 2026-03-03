@@ -16,7 +16,7 @@ models.Base.metadata.create_all(bind=engine)
 
 # --- Helper Functions ---
 
-# Create Basic Auth token string for testing. In real application, it is supposed to be generated and sent from front-end side.
+# Create Basic Auth header string for testing. In real application, it is supposed to be generated and sent from client.
 # Format: "Basic " + base64("user_id:password")
 def generate_basic_auth_token(user_id: str, password: str) -> str:
     raw_str = f"{user_id}:{password}"
@@ -124,7 +124,7 @@ def signup(req: schemas.SignupRequest, db: Session = Depends(get_db)):
         password=req.password,
         nickname=req.user_id, # Default nickname is user_id
         comment="",
-        #auth_token=generate_basic_auth_token(req.user_id, req.password) # If need testing, generate token here. 
+        auth_token=generate_basic_auth_token(req.user_id, req.password) # If need testing, generate token here. 
     )
     db.add(new_user)
     db.commit()
@@ -152,6 +152,7 @@ def get_user(
         raise HTTPException(status_code=404, detail={"message": "No user found"})
     
     # Validate Auth
+    auth_header = db.query(models.User).filter(models.User.auth_token).first()
     get_current_user(db, auth_header)
 
     # build response payload; omit comment key when it's an empty string
